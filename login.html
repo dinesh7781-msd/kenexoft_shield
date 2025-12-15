@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!doctype html>
 
 <html lang="en">
@@ -384,4 +385,392 @@
 
 </body>
 
+=======
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>Kenexoft SHIELD – Login & Registration</title>
+
+  <style>
+
+    body {
+
+      font-family: Arial, sans-serif;
+
+      background: #0f1724;
+
+      color: #fff;
+
+      margin: 0;
+
+      padding: 0;
+
+      display: flex;
+
+      justify-content: center;
+
+      align-items: flex-start;
+
+      min-height: 100vh;
+
+    }
+
+    .container {
+
+      margin-top: 40px;
+
+      background: #0b1220;
+
+      padding: 30px;
+
+      border-radius: 12px;
+
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+
+      width: 100%;
+
+      max-width: 600px;
+
+    }
+
+    h2 { color: #6ca3ff; }
+
+    label { display: block; margin-top: 12px; }
+
+    input, select, textarea {
+
+      width: 100%;
+
+      padding: 10px;
+
+      margin-top: 6px;
+
+      border-radius: 6px;
+
+      border: 1px solid #444;
+
+      background: #111827;
+
+      color: #fff;
+
+    }
+
+    button {
+
+      margin-top: 20px;
+
+      padding: 12px;
+
+      border: none;
+
+      border-radius: 6px;
+
+      background: #6366f1;
+
+      color: white;
+
+      font-size: 16px;
+
+      cursor: pointer;
+
+      width: 100%;
+
+    }
+
+    button:hover { background: #4f46e5; }
+
+    .switch-link {
+
+      margin-top: 15px;
+
+      text-align: center;
+
+    }
+
+    .hidden { display: none; }
+
+    .alert {
+
+      background: #1e293b;
+
+      padding: 10px;
+
+      margin-bottom: 15px;
+
+      border-left: 4px solid #6ca3ff;
+
+    }
+
+  </style>
+
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h2 id="formTitle">Login</h2>
+
+ 
+
+    <!-- Success/Error alerts -->
+
+    <div id="alertBox" class="alert hidden"></div>
+
+ 
+
+    <!-- Login Form -->
+
+    <form id="loginForm" action="login.php" method="POST">
+
+      <label for="loginEmail">Email</label>
+
+      <input type="email" id="loginEmail" name="loginEmail" required />
+
+ 
+
+      <label for="loginPassword">Password</label>
+
+      <input type="password" id="loginPassword" name="loginPassword" required />
+
+ 
+
+      <button type="submit">Login</button>
+
+    </form>
+
+ 
+
+    <!-- Registration Form -->
+
+    <form id="registerForm" class="hidden" action="register.php" method="POST">
+
+      <h3>Company Information</h3>
+
+ 
+
+      <label>Company Name *</label>
+
+      <input type="text" name="companyName" required />
+
+ 
+
+      <label>Website</label>
+
+      <input type="url" name="website" />
+
+ 
+
+      <label>Phone</label>
+
+      <input type="text" name="phone" />
+
+ 
+
+      <label>Company Email *</label>
+
+      <input type="email" name="email" required />
+
+ 
+
+      <label>Branches</label>
+
+      <input type="text" name="branches" />
+
+ 
+
+      <label>Address 1</label>
+
+      <input type="text" name="address1" />
+
+ 
+
+      <label>Address 2</label>
+
+      <input type="text" name="address2" />
+
+ 
+
+      <label>Street</label>
+
+      <input type="text" name="street" />
+
+ 
+
+      <label>City</label>
+
+      <input type="text" name="city" />
+
+ 
+
+      <label>State</label>
+
+      <input type="text" name="state" />
+
+ 
+
+      <label>Country</label>
+
+      <input type="text" name="country" />
+
+ 
+
+      <h3>Representative Information</h3>
+
+ 
+
+      <label>First Name *</label>
+
+      <input type="text" name="firstName" required />
+
+ 
+
+      <label>Middle Name</label>
+
+      <input type="text" name="middleName" />
+
+ 
+
+      <label>Last Name *</label>
+
+      <input type="text" name="lastName" required />
+
+ 
+
+      <label>Role in Company</label>
+
+      <input type="text" name="role" />
+
+ 
+
+      <label>Work Email *</label>
+
+      <input type="email" name="repEmail" required />
+
+ 
+
+      <label>Personal Email</label>
+
+      <input type="email" name="personalEmail" />
+
+ 
+
+      <label>Mobile</label>
+
+      <input type="text" name="mobile" />
+
+ 
+
+      <label>Address</label>
+
+      <textarea name="repAddress"></textarea>
+
+ 
+
+      <!-- reCAPTCHA -->
+
+      <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+
+ 
+
+      <button type="submit">Register</button>
+
+    </form>
+
+ 
+
+    <!-- Switch link -->
+
+    <div class="switch-link">
+
+      <a href="#" id="switchLink">Don’t have an account? Register here</a>
+
+    </div>
+
+  </div>
+
+ 
+
+  <script>
+
+    // Toggle between Login and Register forms
+
+    const switchLink = document.getElementById('switchLink');
+
+    const loginForm = document.getElementById('loginForm');
+
+    const registerForm = document.getElementById('registerForm');
+
+    const formTitle = document.getElementById('formTitle');
+
+    const alertBox = document.getElementById('alertBox');
+
+ 
+
+    switchLink.addEventListener('click', (e) => {
+
+      e.preventDefault();
+
+      if (loginForm.classList.contains('hidden')) {
+
+        loginForm.classList.remove('hidden');
+
+        registerForm.classList.add('hidden');
+
+        formTitle.textContent = 'Login';
+
+        switchLink.textContent = "Don’t have an account? Register here";
+
+      } else {
+
+        loginForm.classList.add('hidden');
+
+        registerForm.classList.remove('hidden');
+
+        formTitle.textContent = 'Register';
+
+        switchLink.textContent = "Already registered? Go to Login";
+
+      }
+
+    });
+
+ 
+
+    // Show alert messages from PHP redirect
+
+    window.addEventListener('DOMContentLoaded', () => {
+
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.has('registered')) {
+
+        alertBox.textContent = "✅ Company registered successfully! You can now log in.";
+
+        alertBox.classList.remove('hidden');
+
+      } else if (params.has('error')) {
+
+        alertBox.textContent = "⚠️ Registration failed. Please check your input.";
+
+        alertBox.classList.remove('hidden');
+
+      }
+
+    });
+
+  </script>
+
+</body>
+
+>>>>>>> ef4b093bc20f5958af3f4e719bf5a41b54a6d289
 </html>
