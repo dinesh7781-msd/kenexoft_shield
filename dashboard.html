@@ -1,0 +1,2929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureOps Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html {
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        color: #2d3748;
+        line-height: 1.3;
+        overflow: hidden;
+    }
+
+    /* Navigation */
+    .navbar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e2e8f0;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        height: 55px;
+    }
+
+    .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 1rem;
+        height: 55px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #4f46e5;
+    }
+
+    .nav-brand i {
+        font-size: 1.1rem;
+    }
+
+    .nav-menu {
+        display: none;
+        gap: 0.8rem;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        color: #64748b;
+        font-weight: 500;
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        color: #4f46e5;
+        background: rgba(79, 70, 229, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .nav-link:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    /* Click ripple effect */
+    .nav-link::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(79, 70, 229, 0.3);
+        transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+    }
+
+    .nav-link.clicked::before {
+        width: 300px;
+        height: 300px;
+        top: 50%;
+        left: 50%;
+    }
+
+    .nav-profile {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #64748b;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+        font-size: 0.85rem;
+    }
+
+    .dropdown {
+        position: absolute;
+        top: 55px;
+        right: 1rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        display: none;
+        flex-direction: column;
+        min-width: 120px;
+        z-index: 1001;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+
+    .dropdown.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .dropdown a {
+        padding: 8px 12px;
+        color: #333;
+        text-decoration: none;
+        font-size: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .dropdown a:hover {
+        background: #f1f5f9;
+        transform: translateX(3px);
+    }
+
+    /* Dashboard Container with proper gaps */
+    .dashboard-container {
+        margin-top: 55px;
+        padding: 1rem;
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        height: calc(100vh - 55px);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        overflow: hidden;
+    }
+
+    /* Section highlighting animation */
+    .section-highlight {
+        animation: sectionPulse 2s ease-in-out;
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(79, 70, 229, 0.4) !important;
+    }
+
+    @keyframes sectionPulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 rgba(79, 70, 229, 0); }
+        50% { transform: scale(1.02); box-shadow: 0 0 30px rgba(79, 70, 229, 0.6); }
+        100% { transform: scale(1.02); box-shadow: 0 0 30px rgba(79, 70, 229, 0.4); }
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        height: 10vh;
+        min-height: 80px;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .hero-content h1 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-content p {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #10b981;
+        font-weight: 500;
+        font-size: 0.65rem;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+    }
+
+    .status-dot.active {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .hero-stat {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #4f46e5;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.65rem;
+    }
+
+    /* Metrics Section */
+    .metrics-section {
+        height: 16vh;
+        min-height: 120px;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .metrics-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.8rem;
+        height: calc(100% - 1.5rem);
+    }
+
+    .metric-box {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 0.8rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 28px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.4rem;
+    }
+
+    .metric-header i {
+        font-size: 1.1rem;
+        padding: 6px;
+        border-radius: 6px;
+    }
+
+    .metric-box.primary .metric-header i {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white;
+    }
+
+    .metric-box.danger .metric-header i {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .metric-box.warning .metric-header i {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .metric-box.success .metric-header i {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .metric-trend {
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+
+    .metric-trend.up {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .metric-trend.down {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .metric-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-body h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .metric-body p {
+        color: #64748b;
+        font-size: 0.7rem;
+        margin-bottom: 0.4rem;
+        flex: 1;
+    }
+
+    .metric-bar {
+        width: 100%;
+        height: 3px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: auto;
+    }
+
+    .metric-progress {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 1s ease;
+    }
+
+    .metric-box.primary .metric-progress {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    }
+
+    .metric-box.danger .metric-progress {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .metric-box.warning .metric-progress {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .metric-box.success .metric-progress {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    /* Analytics Section */
+    .analytics-section {
+        height: 28vh;
+        min-height: 220px;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 0.8rem;
+        height: calc(100% - 1.5rem);
+    }
+
+    .analytics-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+
+    .card-header {
+        padding: 0.8rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .card-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .card-title i {
+        color: #4f46e5;
+        font-size: 0.9rem;
+    }
+
+    .card-title h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .time-selector {
+        padding: 3px 6px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        background: white;
+        color: #64748b;
+        font-size: 0.65rem;
+    }
+
+    .live-indicator {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        color: #ef4444;
+    }
+
+    .pulse-dot {
+        width: 4px;
+        height: 4px;
+        background: #ef4444;
+        border-radius: 50%;
+        animation: pulse 1s infinite;
+    }
+
+    .card-body {
+        padding: 0.8rem;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* Activity Stream */
+    .activity-stream {
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 5px;
+        margin-bottom: 4px;
+        background: #f8fafc;
+        border-left: 2px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .activity-item:hover {
+        background: #f1f5f9;
+        border-left-color: #4f46e5;
+    }
+
+    .activity-item.success {
+        border-left-color: #10b981;
+    }
+
+    .activity-item.danger {
+        border-left-color: #ef4444;
+    }
+
+    .activity-item.warning {
+        border-left-color: #f59e0b;
+    }
+
+    .activity-item.info {
+        border-left-color: #3b82f6;
+    }
+
+    .activity-item.uploaded {
+        border-left-color: #8b5cf6;
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .activity-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        flex-shrink: 0;
+    }
+
+    .activity-text {
+        flex: 1;
+    }
+
+    .activity-message {
+        font-size: 0.7rem;
+        font-weight: 500;
+        margin-bottom: 1px;
+    }
+
+    .activity-time {
+        font-size: 0.55rem;
+        color: #64748b;
+    }
+
+    /* Bottom Section */
+    .bottom-section {
+        flex: 1;
+        min-height: 250px;
+        transition: all 0.3s ease;
+    }
+
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 0.8rem;
+        height: calc(100% - 1.5rem);
+    }
+
+    /* Enhanced sections styles */
+    .anomaly-alert {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px;
+        border-radius: 5px;
+        margin-bottom: 4px;
+        background: #f8fafc;
+        border-left: 3px solid #ef4444;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .anomaly-alert:hover {
+        background: #f1f5f9;
+        transform: translateX(1px);
+    }
+
+    .anomaly-alert.high {
+        border-left-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .anomaly-alert.medium {
+        border-left-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .anomaly-alert.low {
+        border-left-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .anomaly-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .anomaly-score {
+        background: #ef4444;
+        color: white;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        min-width: 28px;
+        text-align: center;
+    }
+
+    .anomaly-score.medium {
+        background: #f59e0b;
+    }
+
+    .anomaly-score.low {
+        background: #10b981;
+    }
+
+    .anomaly-details h4 {
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 1px;
+    }
+
+    .anomaly-details p {
+        font-size: 0.6rem;
+        color: #64748b;
+    }
+
+    .anomaly-timestamp {
+        font-size: 0.55rem;
+        color: #94a3b8;
+    }
+
+    .log-insight {
+        background: #f8fafc;
+        border-radius: 5px;
+        padding: 0.6rem;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #4f46e5;
+    }
+
+    .insight-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.2rem;
+    }
+
+    .insight-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .insight-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #4f46e5;
+    }
+
+    .insight-description {
+        font-size: 0.6rem;
+        color: #64748b;
+        margin-bottom: 0.2rem;
+    }
+
+    .insight-chart {
+        height: 35px;
+        background: linear-gradient(90deg, transparent 0%, rgba(79, 70, 229, 0.1) 50%, transparent 100%);
+        border-radius: 3px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .chart-bar {
+        position: absolute;
+        bottom: 0;
+        width: 3px;
+        background: #4f46e5;
+        border-radius: 1px;
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+
+    .chart-bar:hover {
+        opacity: 1;
+        background: #3730a3;
+    }
+
+    .model-accuracy {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 6px;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 3px;
+        margin-top: 0.4rem;
+    }
+
+    .accuracy-label {
+        font-size: 0.6rem;
+        color: #064e3b;
+        font-weight: 500;
+    }
+
+    .accuracy-score {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+
+    /* Enhanced File Upload Modal */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        min-width: 500px;
+        max-width: 90vw;
+        max-height: 80vh;
+        text-align: center;
+        transform: scale(0.7) translateY(-50px);
+        transition: all 0.3s ease;
+        overflow-y: auto;
+    }
+
+    .modal.show .modal-content {
+        transform: scale(1) translateY(0);
+    }
+
+    .file-drop-zone {
+        border: 3px dashed #4f46e5;
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 1rem 0;
+        background: rgba(79, 70, 229, 0.02);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .file-drop-zone:hover,
+    .file-drop-zone.dragover {
+        border-color: #3730a3;
+        background: rgba(79, 70, 229, 0.08);
+        transform: scale(1.02);
+    }
+
+    .file-drop-zone i {
+        font-size: 2rem;
+        color: #4f46e5;
+        margin-bottom: 1rem;
+    }
+
+    .file-drop-zone h4 {
+        color: #4f46e5;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-drop-zone p {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .file-input-hidden {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .upload-progress {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        text-align: left;
+        display: none;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .file-list {
+        margin: 1rem 0;
+        text-align: left;
+    }
+
+    .file-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .file-item:hover {
+        background: #f1f5f9;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex: 1;
+    }
+
+    .file-icon {
+        width: 32px;
+        height: 32px;
+        background: #4f46e5;
+        color: white;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .file-details h5 {
+        font-size: 0.9rem;
+        color: #374151;
+        margin-bottom: 0.2rem;
+    }
+
+    .file-details p {
+        font-size: 0.7rem;
+        color: #64748b;
+    }
+
+    .file-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-badge.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-badge.processing {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .status-badge.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .modal button {
+        background: #4f46e5;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .modal button:hover {
+        background: #3730a3;
+        transform: translateY(-1px);
+    }
+
+    .modal button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .modal button.secondary {
+        background: #6b7280;
+    }
+
+    .modal button.secondary:hover {
+        background: #4b5563;
+    }
+
+    .uploaded-files-section {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: rgba(16, 185, 129, 0.05);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 8px;
+        text-align: left;
+    }
+
+    .uploaded-files-section h4 {
+        color: #10b981;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .analysis-summary {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(79, 70, 229, 0.05);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        border-radius: 8px;
+    }
+
+    .analysis-summary h5 {
+        color: #4f46e5;
+        margin-bottom: 0.5rem;
+    }
+
+    .analysis-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 6px;
+    }
+
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #4f46e5;
+    }
+
+    .stat-text {
+        font-size: 0.7rem;
+        color: #64748b;
+    }
+
+    /* Loading animation for file upload */
+    .loading-animation {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #4f46e5;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Dark Mode with Glowing Effects */
+    html.dark body {
+        background: linear-gradient(135deg, #232946 0%, #181c2f 100%);
+        color: #e0e7ef;
+    }
+
+    html.dark .navbar {
+        background: rgba(30, 41, 59, 0.98);
+        border-bottom: 1px solid #232946;
+    }
+
+    /* Glowing Text Effects in Dark Mode */
+    html.dark .nav-brand,
+    html.dark .nav-link,
+    html.dark .nav-profile {
+        color: #e0e7ef;
+        text-shadow: 0 0 10px rgba(224, 231, 239, 0.3);
+    }
+
+    html.dark .nav-brand {
+        text-shadow: 0 0 15px rgba(79, 70, 229, 0.6), 0 0 25px rgba(79, 70, 229, 0.4);
+    }
+
+    html.dark .nav-link.active,
+    html.dark .nav-link:hover {
+        color: #e1a6ea;
+        background: rgba(225, 166, 234, 0.08);
+        text-shadow: 0 0 12px rgba(225, 166, 234, 0.5);
+    }
+
+    html.dark .nav-link::before {
+        background: rgba(225, 166, 234, 0.3);
+    }
+
+    html.dark .hero-section,
+    html.dark .metric-box,
+    html.dark .analytics-card {
+        background: rgba(36, 39, 54, 0.95);
+        border: 1px solid #232946;
+        color: #e0e7ef;
+    }
+
+    html.dark .hero-content h1 {
+        text-shadow: 0 0 20px rgba(79, 70, 229, 0.7), 0 0 35px rgba(124, 58, 237, 0.5);
+    }
+
+    html.dark .hero-content p {
+        text-shadow: 0 0 8px rgba(224, 231, 239, 0.4);
+    }
+
+    html.dark .status-indicator {
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    }
+
+    html.dark .stat-number {
+        text-shadow: 0 0 15px rgba(79, 70, 229, 0.6), 0 0 25px rgba(79, 70, 229, 0.4);
+    }
+
+    html.dark .stat-label {
+        text-shadow: 0 0 8px rgba(224, 231, 239, 0.3);
+    }
+
+    html.dark .section-title {
+        color: #e1a6ea;
+        text-shadow: 0 0 20px rgba(225, 166, 234, 0.6), 0 0 35px rgba(225, 166, 234, 0.4);
+    }
+
+    html.dark .metric-body h3 {
+        text-shadow: 0 0 15px rgba(224, 231, 239, 0.5);
+    }
+
+    html.dark .metric-body p {
+        text-shadow: 0 0 8px rgba(224, 231, 239, 0.3);
+    }
+
+    html.dark .metric-trend {
+        text-shadow: 0 0 8px currentColor;
+    }
+
+    html.dark .card-title h3 {
+        text-shadow: 0 0 12px rgba(224, 231, 239, 0.4);
+    }
+
+    html.dark .activity-message {
+        text-shadow: 0 0 8px rgba(224, 231, 239, 0.3);
+    }
+
+    html.dark .activity-time {
+        text-shadow: 0 0 6px rgba(148, 163, 184, 0.4);
+    }
+
+    html.dark .anomaly-details h4 {
+        text-shadow: 0 0 10px rgba(224, 231, 239, 0.4);
+    }
+
+    html.dark .anomaly-details p {
+        text-shadow: 0 0 6px rgba(148, 163, 184, 0.3);
+    }
+
+    html.dark .anomaly-timestamp {
+        text-shadow: 0 0 6px rgba(148, 163, 184, 0.4);
+    }
+
+    html.dark .anomaly-score {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+
+    html.dark .insight-title {
+        text-shadow: 0 0 10px rgba(224, 231, 239, 0.4);
+    }
+
+    html.dark .insight-value {
+        text-shadow: 0 0 15px rgba(79, 70, 229, 0.6);
+    }
+
+    html.dark .insight-description {
+        text-shadow: 0 0 8px rgba(100, 116, 139, 0.4);
+    }
+
+    html.dark .accuracy-label {
+        text-shadow: 0 0 8px rgba(6, 78, 59, 0.8);
+    }
+
+    html.dark .accuracy-score {
+        text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    }
+
+    html.dark .live-indicator {
+        text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    }
+
+    html.dark .activity-item,
+    html.dark .anomaly-alert,
+    html.dark .log-insight {
+        background: #232946;
+        color: #e0e7ef;
+    }
+
+    html.dark .dropdown {
+        background: #232946;
+    }
+
+    html.dark .dropdown a {
+        color: #e0e7ef;
+        text-shadow: 0 0 8px rgba(224, 231, 239, 0.3);
+    }
+
+    html.dark .modal-content {
+        background: #232946;
+        color: #e0e7ef;
+    }
+
+    html.dark .modal-content h3 {
+        text-shadow: 0 0 15px rgba(224, 231, 239, 0.5);
+    }
+
+    html.dark .modal-content p {
+        text-shadow: 0 0 8px rgba(224, 231, 239, 0.3);
+    }
+
+    html.dark .file-drop-zone {
+        border-color: #e1a6ea;
+        background: rgba(225, 166, 234, 0.05);
+    }
+
+    html.dark .file-drop-zone:hover,
+    html.dark .file-drop-zone.dragover {
+        border-color: #d8b4fe;
+        background: rgba(225, 166, 234, 0.1);
+    }
+
+    html.dark .file-item,
+    html.dark .upload-progress,
+    html.dark .analysis-summary,
+    html.dark .uploaded-files-section {
+        background: rgba(36, 39, 54, 0.8);
+        border-color: #232946;
+    }
+
+    html.dark .metric-bar {
+        background: #232946;
+    }
+
+    html.dark .metric-progress {
+        filter: brightness(1.2);
+        box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+    }
+
+    html.dark .section-highlight {
+        box-shadow: 0 0 40px rgba(225, 166, 234, 0.6) !important;
+    }
+
+    /* Enhanced Glowing for Icons */
+    html.dark .metric-header i {
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+    }
+
+    html.dark .card-title i {
+        text-shadow: 0 0 10px rgba(79, 70, 229, 0.6);
+    }
+
+    html.dark .activity-icon i {
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Pulsing Glow Animation for Important Elements */
+    html.dark .status-dot.active {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+    }
+
+    html.dark .pulse-dot {
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .navbar {
+            height: 45px;
+        }
+
+        .nav-container {
+            height: 45px;
+            padding: 0 0.5rem;
+        }
+
+        .nav-brand {
+            font-size: 0.85rem;
+        }
+
+        .nav-brand i {
+            font-size: 1rem;
+        }
+
+        .dashboard-container {
+            margin-top: 45px;
+            padding: 0.5rem;
+            height: calc(100vh - 45px);
+            gap: 0.5rem;
+        }
+
+        .hero-section {
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+            height: 12vh;
+            padding: 0.8rem;
+        }
+
+        .hero-content h1 {
+            font-size: 1rem;
+        }
+
+        .hero-content p {
+            font-size: 0.7rem;
+        }
+
+        .hero-stats {
+            gap: 0.8rem;
+        }
+
+        .stat-number {
+            font-size: 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+        }
+
+        .metrics-container {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .analytics-card:first-child {
+            height: 55%;
+        }
+
+        .analytics-card:last-child {
+            height: 45%;
+        }
+
+        .bottom-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .card-title h3 {
+            font-size: 0.75rem;
+        }
+
+        .activity-message {
+            font-size: 0.65rem;
+        }
+
+        .anomaly-details h4 {
+            font-size: 0.65rem;
+        }
+
+        .insight-title {
+            font-size: 0.65rem;
+        }
+
+        .dropdown {
+            right: 0.5rem;
+        }
+
+        .metrics-section {
+            height: 18vh;
+        }
+
+        .analytics-section {
+            height: 26vh;
+        }
+
+        .modal-content {
+            min-width: 95vw;
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-container {
+            gap: 0.3rem;
+            padding: 0.3rem;
+        }
+
+        .metrics-container {
+            grid-template-columns: 1fr;
+            gap: 0.3rem;
+        }
+
+        .hero-stats {
+            flex-direction: row;
+            justify-content: center;
+            gap: 1.2rem;
+        }
+
+        .metric-box {
+            padding: 0.6rem;
+        }
+
+        .metric-body h3 {
+            font-size: 1.1rem;
+        }
+
+        .activity-stream {
+            max-height: 120px;
+        }
+
+        .anomaly-info {
+            gap: 4px;
+        }
+
+        .anomaly-details h4 {
+            font-size: 0.6rem;
+        }
+
+        .anomaly-details p {
+            font-size: 0.55rem;
+        }
+
+        .insight-chart {
+            height: 30px;
+        }
+
+        .chart-bar {
+            width: 2px;
+        }
+    }
+
+    /* Tablet Responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .nav-menu {
+            display: flex;
+        }
+
+        .dashboard-container {
+            padding: 0.8rem;
+            gap: 0.8rem;
+        }
+
+        .hero-section {
+            height: 8vh;
+        }
+
+        .metrics-section {
+            height: 15vh;
+        }
+
+        .analytics-section {
+            height: 28vh;
+        }
+    }
+
+    /* Desktop Responsive */
+    @media (min-width: 1025px) {
+        .nav-menu {
+            display: flex;
+        }
+
+        .nav-container {
+            padding: 0 1.5rem;
+        }
+
+        .dashboard-container {
+            padding: 1.2rem;
+            gap: 1.2rem;
+        }
+    }
+
+    /* Remove scrollbar */
+    ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+    }
+</style>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <button id="themeToggle" title="Toggle dark mode" style="background:none;border:none;cursor:pointer;font-size:1rem;margin-right:0.5rem;">
+                <i id="themeIcon" class="fas fa-moon"></i>
+            </button>
+            <div class="nav-brand">
+                <i class="fas fa-shield-halved"></i>
+                <span>SecureOps Analytics</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#" class="nav-link active" id="dashboardLink">Dashboard</a>
+                <a href="#" class="nav-link" id="logUploadLink">Log Upload</a>
+                <a href="#" class="nav-link" id="analyticsLink">Analytics</a>
+                <a href="#" class="nav-link" id="threatsLink">Threats</a>
+                <a href="#" class="nav-link" id="subscriptionLink">Subscription</a>
+            </div>
+            <div class="nav-profile" id="profileMenu">
+                <span>Admin</span>
+                <i class="fas fa-chevron-down"></i>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#">Profile</a>
+                    <a href="#" id="logoutBtn">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard-container">
+        <!-- Hero Section -->
+        <section class="hero-section" id="heroSection">
+            <div class="hero-content">
+                <h1>Security Operations Dashboard</h1>
+                <p>Real-time monitoring and comprehensive threat intelligence</p>
+                <div class="status-indicator">
+                    <span class="status-dot active"></span>
+                    <span>All systems operational</span>
+                </div>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="stat-number">99.9%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Monitoring</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Metrics Section -->
+        <section class="metrics-section" id="metricsSection">
+            <h2 class="section-title">Security Metrics Overview</h2>
+            <div class="metrics-container">
+                <div class="metric-box primary">
+                    <div class="metric-header">
+                        <i class="fas fa-database"></i>
+                        <span class="metric-trend up">↗ 12%</span>
+                    </div>
+                    <div class="metric-body">
+                        <h3 id="logsProcessedCount">1,247</h3>
+                        <p>Total Logs Processed</p>
+                        <div class="metric-bar">
+                            <div class="metric-progress" id="logsProgress" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-box danger">
+                    <div class="metric-header">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span class="metric-trend down">↘ 8%</span>
+                    </div>
+                    <div class="metric-body">
+                        <h3 id="threatsDetected">23</h3>
+                        <p>Threats Detected</p>
+                        <div class="metric-bar">
+                            <div class="metric-progress" id="threatsProgress" style="width: 23%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-box warning">
+                    <div class="metric-header">
+                        <i class="fas fa-radar"></i>
+                        <span class="metric-trend up">↗ 2</span>
+                    </div>
+                    <div class="metric-body">
+                        <h3 id="activeMonitors">8</h3>
+                        <p>Active Monitors</p>
+                        <div class="metric-bar">
+                            <div class="metric-progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-box success">
+                    <div class="metric-header">
+                        <i class="fas fa-heartbeat"></i>
+                        <span class="metric-trend up">↗ 1%</span>
+                    </div>
+                    <div class="metric-body">
+                        <h3 id="systemHealth">98%</h3>
+                        <p>System Health</p>
+                        <div class="metric-bar">
+                            <div class="metric-progress" style="width: 98%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Grid -->
+        <section class="analytics-section" id="analyticsSection">
+            <div class="analytics-grid">
+                <!-- Security Trends Chart -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-area"></i>
+                            <h3>Security Trends Analysis</h3>
+                        </div>
+                        <div class="card-actions">
+                            <select class="time-selector">
+                                <option>Last 6 months</option>
+                                <option>Last 3 months</option>
+                                <option>Last month</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Live Activity Panel -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-pulse"></i>
+                            <h3>Live Activity Stream</h3>
+                        </div>
+                        <span class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            LIVE
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-stream" id="activityStream">
+                            <!-- Activities populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Enhanced Analytics Sections -->
+        <section class="bottom-section" id="threatsSection">
+            <div class="bottom-grid">
+                <!-- ML-Powered Threat Predictions -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-brain"></i>
+                            <h3>ML-Powered Threat Predictions</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="threatPredictionChart"></canvas>
+                        <div class="model-accuracy">
+                            <span class="accuracy-label">Model Accuracy</span>
+                            <span class="accuracy-score">94.2%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anomaly Detection Alerts -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Anomaly Detection Alerts</h3>
+                        </div>
+                        <span class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            LIVE
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-stream" id="anomalyAlerts">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log-Specific Insights -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-search-plus"></i>
+                            <h3>Log-Specific Insights</h3>
+                        </div>
+                    </div>
+                    <div class="card-body" id="logInsights">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Enhanced Log Upload Modal -->
+    <div class="modal" id="logUploadModal">
+        <div class="modal-content">
+            <h3>📁 Upload Security Logs</h3>
+            <p>Upload log files for real-time analysis and threat detection</p>
+            
+            <div class="file-drop-zone" id="fileDropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h4>Drag & Drop Files Here</h4>
+                <p>or click to browse files</p>
+                <p style="font-size: 0.8rem; margin-top: 0.5rem;">Supported formats: .log, .txt, .json, .csv</p>
+            </div>
+            
+            <input type="file" id="logFileInput" class="file-input-hidden" multiple accept=".log,.txt,.json,.csv">
+            
+            <div class="file-list" id="fileList" style="display: none;">
+                <h4>📄 Selected Files:</h4>
+            </div>
+            
+            <div class="upload-progress" id="uploadProgress">
+                <h5>⚡ Processing Files...</h5>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Initializing upload...</p>
+            </div>
+            
+            <div class="uploaded-files-section" id="uploadedFilesSection" style="display: none;">
+                <h4><i class="fas fa-check-circle"></i> Successfully Processed</h4>
+                <div id="processedFilesList"></div>
+                
+                <div class="analysis-summary" id="analysisSummary">
+                    <h5>📊 Quick Analysis</h5>
+                    <div class="analysis-stats" id="analysisStats">
+                        <!-- Analysis stats will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="file-actions">
+                <button id="uploadBtn" disabled>🚀 Upload & Analyze</button>
+                <button id="clearFilesBtn" class="secondary">🗑️ Clear All</button>
+                <button id="closeUpload" class="secondary">✖️ Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="modal" id="subscriptionModal">
+        <div class="modal-content">
+            <h3>Subscription Status</h3>
+            <p>Current Plan: <strong>Free Tier</strong></p>
+            <p>Features: Basic monitoring, 1GB log storage</p>
+            <div style="margin: 15px 0;">
+                <h4>Pro Plan Benefits:</h4>
+                <ul style="text-align: left; margin: 10px 0;">
+                    <li>Advanced ML threat detection</li>
+                    <li>100GB log storage</li>
+                    <li>Real-time alerts</li>
+                    <li>API access</li>
+                </ul>
+            </div>
+            <div>
+                <button id="upgradeBtn">Upgrade to Pro ($29/month)</button>
+                <button id="closeSubscription">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for file management - FIXED TRACKING
+        let selectedFiles = [];
+        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedLogFiles')) || [];
+        let totalLogsProcessed = parseInt(localStorage.getItem('totalLogsProcessed')) || 1247;
+        let totalThreatsDetected = parseInt(localStorage.getItem('totalThreatsDetected')) || 23;
+        let totalErrors = parseInt(localStorage.getItem('totalErrors')) || 0;
+        let totalWarnings = parseInt(localStorage.getItem('totalWarnings')) || 0;
+
+        // FIXED: Store initial baseline values to prevent overrides
+        let baselineMetrics = {
+            logs: 1247,
+            threats: 23,
+            monitors: 8,
+            health: 98
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            populateActivityStream();
+            populateAnomalyAlerts();
+            populateLogInsights();
+            initializeNavigation();
+            initializeFileUpload();
+            updateAllMetrics(); // FIXED: Update all metrics on load
+            startLiveUpdates();
+        });
+
+        // FIXED: Initialize file upload functionality
+        function initializeFileUpload() {
+            const fileDropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('logFileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const clearFilesBtn = document.getElementById('clearFilesBtn');
+
+            // Drag and drop functionality
+            fileDropZone.addEventListener('click', () => fileInput.click());
+            fileDropZone.addEventListener('dragover', handleDragOver);
+            fileDropZone.addEventListener('dragleave', handleDragLeave);
+            fileDropZone.addEventListener('drop', handleFileDrop);
+            
+            fileInput.addEventListener('change', handleFileSelect);
+            uploadBtn.addEventListener('click', processSelectedFiles);
+            clearFilesBtn.addEventListener('click', clearSelectedFiles);
+        }
+
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFilesToSelection(files);
+        }
+
+        // File selection handler
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addFilesToSelection(files);
+        }
+
+        // Add files to selection
+        function addFilesToSelection(files) {
+            const validFiles = files.filter(file => {
+                const validExtensions = ['.log', '.txt', '.json', '.csv'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                return validExtensions.includes(fileExtension) && file.size <= 50 * 1024 * 1024; // 50MB limit
+            });
+
+            validFiles.forEach(file => {
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
+                }
+            });
+
+            if (validFiles.length !== files.length) {
+                showNotification('Some files were skipped (invalid format or too large)', 'warning');
+            }
+
+            updateFileList();
+            updateUploadButton();
+        }
+
+        // Update file list display
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const fileListContainer = fileList.querySelector('div') || document.createElement('div');
+            
+            if (selectedFiles.length === 0) {
+                fileList.style.display = 'none';
+                return;
+            }
+
+            fileList.style.display = 'block';
+            fileListContainer.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+                const fileIcon = getFileIcon(fileExtension);
+                const fileSize = formatFileSize(file.size);
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">${fileIcon}</div>
+                        <div class="file-details">
+                            <h5>${file.name}</h5>
+                            <p>${fileSize} • ${fileExtension.toUpperCase()} • ${new Date(file.lastModified).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="file-status">
+                        <span class="status-badge processing">Ready</span>
+                        <button onclick="removeFile(${index})" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                fileListContainer.appendChild(fileItem);
+            });
+
+            if (!fileList.contains(fileListContainer)) {
+                fileList.appendChild(fileListContainer);
+            }
+        }
+
+        // Remove file from selection
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            updateUploadButton();
+        }
+
+        // Clear all selected files
+        function clearSelectedFiles() {
+            selectedFiles = [];
+            updateFileList();
+            updateUploadButton();
+            document.getElementById('uploadedFilesSection').style.display = 'none';
+        }
+
+        // Update upload button state
+        function updateUploadButton() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.disabled = selectedFiles.length === 0;
+            uploadBtn.textContent = selectedFiles.length === 0 ? '🚀 Select Files to Upload' : `🚀 Upload ${selectedFiles.length} File(s)`;
+        }
+
+        // FIXED: Process selected files with proper metric updates
+        async function processSelectedFiles() {
+            if (selectedFiles.length === 0) return;
+
+            const uploadProgress = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            uploadProgress.style.display = 'block';
+            uploadBtn.disabled = true;
+
+            let processedFiles = [];
+            let sessionTotalLines = 0;
+            let sessionTotalErrors = 0;
+            let sessionTotalWarnings = 0;
+            let sessionThreatIndicators = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const progress = ((i + 1) / selectedFiles.length) * 100;
+                
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `Processing ${file.name}... (${i + 1}/${selectedFiles.length})`;
+
+                try {
+                    // Read file content
+                    const content = await readFileContent(file);
+                    const analysis = analyzeLogContent(content, file.name);
+                    
+                    // FIXED: Accumulate session data
+                    sessionTotalLines += analysis.lines;
+                    sessionTotalErrors += analysis.errors;
+                    sessionTotalWarnings += analysis.warnings;
+                    sessionThreatIndicators += analysis.threats;
+
+                    processedFiles.push({
+                        name: file.name,
+                        size: file.size,
+                        uploadedAt: new Date().toISOString(),
+                        analysis: analysis,
+                        content: content.substring(0, 5000) // Store first 5KB for preview
+                    });
+
+                    // Update file status in the list
+                    updateFileStatus(i, 'success', 'Processed');
+                    
+                    // Simulate processing time
+                    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
+                    
+                } catch (error) {
+                    console.error(`Error processing ${file.name}:`, error);
+                    updateFileStatus(i, 'error', 'Error');
+                    processedFiles.push({
+                        name: file.name,
+                        size: file.size,
+                        uploadedAt: new Date().toISOString(),
+                        error: error.message
+                    });
+                }
+            }
+
+            // FIXED: Update global totals and save to localStorage
+            totalLogsProcessed += sessionTotalLines;
+            totalThreatsDetected += sessionThreatIndicators;
+            totalErrors += sessionTotalErrors;
+            totalWarnings += sessionTotalWarnings;
+
+            localStorage.setItem('totalLogsProcessed', totalLogsProcessed.toString());
+            localStorage.setItem('totalThreatsDetected', totalThreatsDetected.toString());
+            localStorage.setItem('totalErrors', totalErrors.toString());
+            localStorage.setItem('totalWarnings', totalWarnings.toString());
+            
+            // Save processed files
+            uploadedFiles = [...uploadedFiles, ...processedFiles];
+            localStorage.setItem('uploadedLogFiles', JSON.stringify(uploadedFiles));
+
+            // FIXED: Update all dashboard metrics immediately
+            updateAllMetrics();
+
+            // Show results
+            displayUploadResults(processedFiles, {
+                totalLines: sessionTotalLines,
+                totalErrors: sessionTotalErrors,
+                totalWarnings: sessionTotalWarnings,
+                threatIndicators: sessionThreatIndicators
+            });
+
+            // Add to activity stream
+            addFileUploadActivity(selectedFiles.length, sessionTotalLines, sessionThreatIndicators);
+
+            // Reset upload state
+            selectedFiles = [];
+            updateFileList();
+            uploadBtn.disabled = false;
+            uploadProgress.style.display = 'none';
+            
+            showNotification(`Successfully processed ${processedFiles.length} files! Found ${sessionThreatIndicators} threats!`, 'success');
+        }
+
+        // Read file content
+        function readFileContent(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+
+        // FIXED: Enhanced log content analysis
+        function analyzeLogContent(content, filename) {
+            const lines = content.split('\n').filter(line => line.trim().length > 0);
+            let errors = 0;
+            let warnings = 0;
+            let threats = 0;
+            let timestamps = [];
+
+            // Enhanced threat patterns to look for
+            const threatPatterns = [
+                /failed.{0,10}login/i,
+                /unauthorized/i,
+                /malware/i,
+                /virus/i,
+                /attack/i,
+                /intrusion/i,
+                /suspicious/i,
+                /blocked/i,
+                /denied/i,
+                /firewall/i,
+                /brute.{0,10}force/i,
+                /ddos/i,
+                /phishing/i,
+                /injection/i,
+                /exploit/i,
+                /backdoor/i,
+                /trojan/i,
+                /ransomware/i
+            ];
+
+            const errorPatterns = [
+                /error/i,
+                /fail/i,
+                /fatal/i,
+                /exception/i,
+                /critical/i
+            ];
+
+            const warningPatterns = [
+                /warn/i,
+                /warning/i,
+                /alert/i,
+                /notice/i
+            ];
+
+            lines.forEach(line => {
+                // Count error levels
+                errorPatterns.forEach(pattern => {
+                    if (pattern.test(line)) errors++;
+                });
+                
+                warningPatterns.forEach(pattern => {
+                    if (pattern.test(line)) warnings++;
+                });
+                
+                // Check for threats with higher accuracy
+                threatPatterns.forEach(pattern => {
+                    if (pattern.test(line)) threats++;
+                });
+
+                // Extract timestamps (more patterns)
+                const timestampMatch = line.match(/\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}|\d{2}-\d{2}-\d{4}|\d{4}\/\d{2}\/\d{2}/);
+                if (timestampMatch && timestamps.length < 5) {
+                    timestamps.push(timestampMatch[0]);
+                }
+            });
+
+            return {
+                lines: lines.length,
+                errors: Math.min(errors, lines.length), // Cap at line count
+                warnings: Math.min(warnings, lines.length), // Cap at line count
+                threats: Math.min(threats, lines.length), // Cap at line count
+                timestamps: timestamps,
+                fileType: filename.split('.').pop().toLowerCase(),
+                size: content.length,
+                processed: true
+            };
+        }
+
+        // Update file status in list
+        function updateFileStatus(index, statusType, statusText) {
+            const fileItems = document.querySelectorAll('.file-item');
+            if (fileItems[index]) {
+                const statusBadge = fileItems[index].querySelector('.status-badge');
+                statusBadge.className = `status-badge ${statusType}`;
+                statusBadge.textContent = statusText;
+            }
+        }
+
+        // Display upload results
+        function displayUploadResults(processedFiles, summary) {
+            const uploadedSection = document.getElementById('uploadedFilesSection');
+            const filesList = document.getElementById('processedFilesList');
+            const analysisStats = document.getElementById('analysisStats');
+
+            uploadedSection.style.display = 'block';
+
+            // Show processed files
+            filesList.innerHTML = processedFiles.map(file => `
+                <div class="file-item" style="margin: 0.3rem 0;">
+                    <div class="file-info">
+                        <div class="file-icon" style="background: #10b981;">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="file-details">
+                            <h5>${file.name}</h5>
+                            <p>${file.analysis ? `${file.analysis.lines.toLocaleString()} lines, ${file.analysis.errors} errors, ${file.analysis.threats} threats` : 'Processing error'}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Show analysis summary
+            analysisStats.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-number">${summary.totalLines.toLocaleString()}</div>
+                    <div class="stat-text">Log Lines</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${summary.totalErrors}</div>
+                    <div class="stat-text">Errors Found</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${summary.totalWarnings}</div>
+                    <div class="stat-text">Warnings</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${summary.threatIndicators}</div>
+                    <div class="stat-text">Threat Indicators</div>
+                </div>
+            `;
+        }
+
+        // Add file upload activity to stream
+        function addFileUploadActivity(fileCount, lineCount, threatCount) {
+            const activityStream = document.getElementById('activityStream');
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'activity-item uploaded';
+            newItem.style.opacity = '0';
+            newItem.style.transform = 'translateY(-3px)';
+            
+            newItem.innerHTML = `
+                <div class="activity-icon uploaded">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <div class="activity-text">
+                    <div class="activity-message">Log files uploaded and analyzed</div>
+                    <div class="activity-details" style="font-size: 0.6rem; color: #94a3b8; margin: 1px 0;">
+                        ${fileCount} files processed, ${lineCount.toLocaleString()} lines, ${threatCount} threats detected
+                    </div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            
+            activityStream.insertBefore(newItem, activityStream.firstChild);
+            
+            setTimeout(() => {
+                newItem.style.transition = 'all 0.3s ease';
+                newItem.style.opacity = '1';
+                newItem.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Remove old activities to prevent overflow
+            const items = activityStream.querySelectorAll('.activity-item');
+            if (items.length > 6) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        // FIXED: Update all dashboard metrics with actual uploaded data
+        function updateAllMetrics() {
+            // Update logs processed count
+            const logCountElement = document.getElementById('logsProcessedCount');
+            const logsProgress = document.getElementById('logsProgress');
+            if (logCountElement) {
+                logCountElement.textContent = totalLogsProcessed.toLocaleString();
+                // Update progress bar based on total vs baseline
+                const progressPercent = Math.min(((totalLogsProcessed / baselineMetrics.logs) * 85), 100);
+                logsProgress.style.width = `${progressPercent}%`;
+            }
+
+            // Update threats detected count
+            const threatCountElement = document.getElementById('threatsDetected');
+            const threatsProgress = document.getElementById('threatsProgress');
+            if (threatCountElement) {
+                threatCountElement.textContent = totalThreatsDetected.toLocaleString();
+                // Update progress bar
+                const progressPercent = Math.min(((totalThreatsDetected / baselineMetrics.threats) * 23), 100);
+                threatsProgress.style.width = `${progressPercent}%`;
+            }
+
+            // Update trend indicators based on uploaded data
+            const trendElements = document.querySelectorAll('.metric-trend');
+            if (trendElements.length >= 2) {
+                // Update logs trend
+                if (totalLogsProcessed > baselineMetrics.logs) {
+                    const increase = Math.round(((totalLogsProcessed - baselineMetrics.logs) / baselineMetrics.logs) * 100);
+                    trendElements[0].textContent = `↗ ${increase}%`;
+                    trendElements[0].className = 'metric-trend up';
+                }
+                
+                // Update threats trend  
+                if (totalThreatsDetected > baselineMetrics.threats) {
+                    const increase = Math.round(((totalThreatsDetected - baselineMetrics.threats) / baselineMetrics.threats) * 100);
+                    trendElements[1].textContent = `↗ ${increase}%`;
+                    trendElements[1].className = 'metric-trend up';
+                }
+            }
+        }
+
+        // Utility functions
+        function getFileIcon(extension) {
+            const icons = {
+                'log': '<i class="fas fa-file-alt"></i>',
+                'txt': '<i class="fas fa-file-text"></i>',
+                'json': '<i class="fas fa-file-code"></i>',
+                'csv': '<i class="fas fa-file-excel"></i>'
+            };
+            return icons[extension] || '<i class="fas fa-file"></i>';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Initialize navigation with animations
+        function initializeNavigation() {
+            const dashboardLink = document.getElementById('dashboardLink');
+            const logUploadLink = document.getElementById('logUploadLink');
+            const analyticsLink = document.getElementById('analyticsLink');
+            const threatsLink = document.getElementById('threatsLink');
+            const subscriptionLink = document.getElementById('subscriptionLink');
+
+            // Add click animation to all nav links
+            function addClickAnimation(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove clicked class from all links
+                    document.querySelectorAll('.nav-link').forEach(l => {
+                        l.classList.remove('clicked', 'active');
+                    });
+                    
+                    // Add clicked animation and active state
+                    this.classList.add('clicked', 'active');
+                    
+                    // Remove clicked class after animation
+                    setTimeout(() => {
+                        this.classList.remove('clicked');
+                    }, 600);
+                });
+            }
+
+            // Dashboard link
+            dashboardLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                addClickAnimation(this);
+                highlightSection('heroSection');
+                showNotification('Dashboard Overview', 'success');
+            });
+
+            // Log Upload link
+            logUploadLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                addClickAnimation(this);
+                showLogUploadModal();
+            });
+
+            // Analytics link
+            analyticsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                addClickAnimation(this);
+                highlightSection('analyticsSection');
+                showNotification('Analytics Section', 'info');
+            });
+
+            // Threats link
+            threatsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                addClickAnimation(this);
+                highlightSection('threatsSection');
+                showNotification('Threat Detection Center', 'warning');
+            });
+
+            // Subscription link
+            subscriptionLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                addClickAnimation(this);
+                showSubscriptionModal();
+            });
+
+            // Add click animation effect to all links
+            document.querySelectorAll('.nav-link').forEach(addClickAnimation);
+        }
+
+        // Highlight section with animation
+        function highlightSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                // Remove highlight from all sections
+                document.querySelectorAll('.section-highlight').forEach(s => {
+                    s.classList.remove('section-highlight');
+                });
+                
+                // Add highlight to target section
+                section.classList.add('section-highlight');
+                
+                // Remove highlight after animation
+                setTimeout(() => {
+                    section.classList.remove('section-highlight');
+                }, 2000);
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'warning' ? '#f59e0b' : '#4f46e5'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                font-weight: 500;
+                z-index: 3000;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+                transform: translateX(300px);
+                transition: all 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Animate out and remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(300px)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Enhanced log upload modal
+        function showLogUploadModal() {
+            const modal = document.getElementById('logUploadModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+            showNotification('Log Upload Center - Real File Processing!', 'info');
+        }
+
+        // Enhanced subscription modal
+        function showSubscriptionModal() {
+            const modal = document.getElementById('subscriptionModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+            showNotification('Subscription Management', 'info');
+        }
+
+        // Initialize Chart.js charts with dynamic data
+        function initializeCharts() {
+            // Security Trends Area Chart
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            
+            const gradient1 = trendsCtx.createLinearGradient(0, 0, 0, 300);
+            gradient1.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+            gradient1.addColorStop(1, 'rgba(79, 70, 229, 0.05)');
+            
+            const gradient2 = trendsCtx.createLinearGradient(0, 0, 0, 300);
+            gradient2.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
+            gradient2.addColorStop(1, 'rgba(239, 68, 68, 0.05)');
+
+            new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Logs Processed (K)',
+                        data: [0.85, 0.92, 1.1, 1.2, 1.18, Math.round(totalLogsProcessed / 1000 * 100) / 100],
+                        borderColor: '#4f46e5',
+                        backgroundColor: gradient1,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#4f46e5',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1,
+                        pointRadius: 2
+                    }, {
+                        label: 'Threats',
+                        data: [15, 22, 18, 28, 25, totalThreatsDetected],
+                        borderColor: '#ef4444',
+                        backgroundColor: gradient2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#64748b',
+                                font: {
+                                    family: 'Inter',
+                                    size: 10
+                                },
+                                usePointStyle: true,
+                                padding: 10
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Inter',
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)',
+                                borderColor: 'rgba(148, 163, 184, 0.2)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Inter',
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)',
+                                borderColor: 'rgba(148, 163, 184, 0.2)'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+
+            // ML Threat Predictions Chart
+            const threatPredictionsCtx = document.getElementById('threatPredictionChart').getContext('2d');
+            new Chart(threatPredictionsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['DDoS', 'Malware', 'Phishing', 'Brute Force', 'SQL Inj', 'XSS'],
+                    datasets: [{
+                        label: 'Predicted Threats',
+                        data: [45, 32, 28, 15, 12, 8],
+                        backgroundColor: [
+                            '#ef4444',
+                            '#f59e0b', 
+                            '#8b5cf6',
+                            '#ec4899',
+                            '#06b6d4',
+                            '#10b981'
+                        ],
+                        borderRadius: 3,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Inter',
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Inter',
+                                    size: 9
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate activity stream
+        function populateActivityStream() {
+            const activities = [
+                {
+                    message: "Security log analysis completed",
+                    details: "server-prod-01.log processed",
+                    time: "2 min",
+                    type: "success",
+                    icon: "fas fa-check-circle"
+                },
+                {
+                    message: "Threat vector identified",
+                    details: "Suspicious traffic detected",
+                    time: "8 min",
+                    type: "danger", 
+                    icon: "fas fa-exclamation-triangle"
+                },
+                {
+                    message: "System backup completed",
+                    details: "Data backup with integrity check",
+                    time: "45 min",
+                    type: "success",
+                    icon: "fas fa-database"
+                },
+                {
+                    message: "Anomalous user activity",
+                    details: "Multiple failed login attempts",
+                    time: "1.2 hrs",
+                    type: "warning",
+                    icon: "fas fa-user-shield"
+                }
+            ];
+
+            const activityStream = document.getElementById('activityStream');
+            
+            activities.forEach(activity => {
+                const activityItem = document.createElement('div');
+                activityItem.className = `activity-item ${activity.type}`;
+                
+                activityItem.innerHTML = `
+                    <div class="activity-icon ${activity.type}">
+                        <i class="${activity.icon}"></i>
+                    </div>
+                    <div class="activity-text">
+                        <div class="activity-message">${activity.message}</div>
+                        <div class="activity-details" style="font-size: 0.6rem; color: #94a3b8; margin: 1px 0;">${activity.details}</div>
+                        <div class="activity-time">${activity.time} ago</div>
+                    </div>
+                `;
+                
+                activityStream.appendChild(activityItem);
+            });
+        }
+
+        // Populate anomaly detection alerts
+        function populateAnomalyAlerts() {
+            const anomalies = [
+                {
+                    title: "Unusual Data Transfer",
+                    description: "Server transferred 15.7GB in 10 mins",
+                    score: "0.95",
+                    severity: "high",
+                    time: "3 min ago"
+                },
+                {
+                    title: "Geographic Login Anomaly",
+                    description: "Tokyo login after NYC login",
+                    score: "0.82",
+                    severity: "medium", 
+                    time: "12 min ago"
+                },
+                {
+                    title: "Off-Hours DB Access",
+                    description: "Database queries at 3:42 AM",
+                    score: "0.71",
+                    severity: "medium",
+                    time: "45 min ago"
+                },
+                {
+                    title: "Network Scanning",
+                    description: "Port scanning from 10.0.1.45",
+                    score: "0.68",
+                    severity: "low",
+                    time: "1.2 hrs ago"
+                }
+            ];
+
+            const anomalyContainer = document.getElementById('anomalyAlerts');
+            
+            anomalies.forEach(anomaly => {
+                const alertItem = document.createElement('div');
+                alertItem.className = `anomaly-alert ${anomaly.severity}`;
+                
+                alertItem.innerHTML = `
+                    <div class="anomaly-info">
+                        <span class="anomaly-score ${anomaly.severity}">${anomaly.score}</span>
+                        <div class="anomaly-details">
+                            <h4>${anomaly.title}</h4>
+                            <p>${anomaly.description}</p>
+                        </div>
+                    </div>
+                    <div class="anomaly-timestamp">${anomaly.time}</div>
+                `;
+                
+                alertItem.addEventListener('click', () => {
+                    showDetailedAlert(anomaly);
+                });
+                
+                anomalyContainer.appendChild(alertItem);
+            });
+        }
+
+        // Show detailed alert modal
+        function showDetailedAlert(anomaly) {
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>🔍 Anomaly Investigation</h3>
+                    <div style="text-align: left; margin: 15px 0;">
+                        <p><strong>Alert:</strong> ${anomaly.title}</p>
+                        <p><strong>Description:</strong> ${anomaly.description}</p>
+                        <p><strong>Anomaly Score:</strong> ${anomaly.score}</p>
+                        <p><strong>Severity:</strong> ${anomaly.severity.toUpperCase()}</p>
+                        <p><strong>Detected:</strong> ${anomaly.time}</p>
+                    </div>
+                    <div>
+                        <button onclick="this.closest('.modal').remove()">Close Investigation</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Populate log-specific insights
+        function populateLogInsights() {
+            const insights = [
+                {
+                    title: "Failed Login Attempts",
+                    value: "247",
+                    description: "Spike from IP range 185.220.x.x",
+                    type: "auth",
+                    chartData: [12, 15, 18, 23, 31, 45, 67, 89, 134, 178, 201, 247]
+                },
+                {
+                    title: "Blocked Phishing Emails", 
+                    value: "89",
+                    description: "Suspicious attachments blocked",
+                    type: "email",
+                    chartData: [45, 52, 48, 61, 58, 73, 69, 82, 79, 85, 87, 89]
+                },
+                {
+                    title: "Firewall Denials",
+                    value: "1,342",
+                    description: "Traffic to suspicious domains",
+                    type: "network",
+                    chartData: [890, 923, 1045, 1123, 1089, 1156, 1201, 1234, 1278, 1301, 1325, 1342]
+                }
+            ];
+
+            const insightsContainer = document.getElementById('logInsights');
+            
+            insights.forEach((insight, index) => {
+                const insightItem = document.createElement('div');
+                insightItem.className = 'log-insight';
+                
+                insightItem.innerHTML = `
+                    <div class="insight-header">
+                        <span class="insight-title">${insight.title}</span>
+                        <span class="insight-value">${insight.value}</span>
+                    </div>
+                    <div class="insight-description">${insight.description}</div>
+                    <div class="insight-chart" id="chart-${index}"></div>
+                `;
+                
+                insightsContainer.appendChild(insightItem);
+                
+                // Add mini chart bars
+                const chartContainer = document.getElementById(`chart-${index}`);
+                insight.chartData.forEach((value, i) => {
+                    const bar = document.createElement('div');
+                    bar.className = 'chart-bar';
+                    const maxValue = Math.max(...insight.chartData);
+                    const height = (value / maxValue) * 25; // Max height 25px
+                    bar.style.height = `${height}px`;
+                    bar.style.left = `${i * 6}px`;
+                    bar.title = `${insight.title}: ${value}`;
+                    chartContainer.appendChild(bar);
+                });
+            });
+        }
+
+        // FIXED: Start live updates but don't override upload data
+        function startLiveUpdates() {
+            setInterval(() => {
+                // Only add new activities, don't update core metrics that come from uploads
+                addRandomActivity();
+                addRandomAnomalyAlert();
+            }, 12000); // Slower updates to not interfere
+        }
+
+        // Add random activity (not overriding upload metrics)
+        function addRandomActivity() {
+            const randomActivities = [
+                {
+                    message: "Security scan completed",
+                    details: "Vulnerability assessment finished",
+                    type: "info",
+                    icon: "fas fa-search"
+                },
+                {
+                    message: "Firewall rule updated", 
+                    details: "New protection rule deployed",
+                    type: "success",
+                    icon: "fas fa-shield-alt"
+                }
+            ];
+            
+            const randomActivity = randomActivities[Math.floor(Math.random() * randomActivities.length)];
+            const activityStream = document.getElementById('activityStream');
+            
+            const newItem = document.createElement('div');
+            newItem.className = `activity-item ${randomActivity.type}`;
+            newItem.style.opacity = '0';
+            newItem.style.transform = 'translateY(-3px)';
+            
+            newItem.innerHTML = `
+                <div class="activity-icon ${randomActivity.type}">
+                    <i class="${randomActivity.icon}"></i>
+                </div>
+                <div class="activity-text">
+                    <div class="activity-message">${randomActivity.message}</div>
+                    <div class="activity-details" style="font-size: 0.6rem; color: #94a3b8; margin: 1px 0;">${randomActivity.details}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            
+            activityStream.insertBefore(newItem, activityStream.firstChild);
+            
+            setTimeout(() => {
+                newItem.style.transition = 'all 0.3s ease';
+                newItem.style.opacity = '1';
+                newItem.style.transform = 'translateY(0)';
+            }, 100);
+            
+            const items = activityStream.querySelectorAll('.activity-item');
+            if (items.length > 6) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        // Add random anomaly alert
+        function addRandomAnomalyAlert() {
+            const newAnomalies = [
+                {
+                    title: "Unusual API Activity",
+                    description: "Elevated API requests detected",
+                    score: "0.87",
+                    severity: "medium",
+                    time: "Just now"
+                },
+                {
+                    title: "File Access Pattern",
+                    description: "Multiple sensitive files accessed",
+                    score: "0.74",
+                    severity: "low",
+                    time: "Just now"
+                }
+            ];
+            
+            const randomAnomaly = newAnomalies[Math.floor(Math.random() * newAnomalies.length)];
+            const anomalyContainer = document.getElementById('anomalyAlerts');
+            
+            const newAlert = document.createElement('div');
+            newAlert.className = `anomaly-alert ${randomAnomaly.severity}`;
+            newAlert.style.opacity = '0';
+            newAlert.style.transform = 'translateY(-3px)';
+            
+            newAlert.innerHTML = `
+                <div class="anomaly-info">
+                    <span class="anomaly-score ${randomAnomaly.severity}">${randomAnomaly.score}</span>
+                    <div class="anomaly-details">
+                        <h4>${randomAnomaly.title}</h4>
+                        <p>${randomAnomaly.description}</p>
+                    </div>
+                </div>
+                <div class="anomaly-timestamp">${randomAnomaly.time}</div>
+            `;
+            
+            newAlert.addEventListener('click', () => {
+                showDetailedAlert(randomAnomaly);
+            });
+            
+            anomalyContainer.insertBefore(newAlert, anomalyContainer.firstChild);
+            
+            setTimeout(() => {
+                newAlert.style.transition = 'all 0.3s ease';
+                newAlert.style.opacity = '1';
+                newAlert.style.transform = 'translateY(0)';
+            }, 100);
+            
+            const alerts = anomalyContainer.querySelectorAll('.anomaly-alert');
+            if (alerts.length > 4) {
+                alerts[alerts.length - 1].remove();
+            }
+        }
+
+        // Theme toggle functionality
+        const html = document.documentElement;
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            html.classList.remove('dark');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        });
+
+        // Profile menu functionality
+        const profileMenu = document.getElementById("profileMenu");
+        const profileDropdown = document.getElementById("profileDropdown");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        profileMenu.addEventListener("click", () => {
+            const isOpen = profileDropdown.style.display === "flex";
+            profileDropdown.style.display = isOpen ? "none" : "flex";
+            if (!isOpen) {
+                setTimeout(() => profileDropdown.classList.add('show'), 10);
+            } else {
+                profileDropdown.classList.remove('show');
+            }
+        });
+
+        logoutBtn.addEventListener("click", () => {
+            showNotification('Logging out...', 'info');
+            setTimeout(() => {
+                alert("Session ended. Redirecting to login...");
+            }, 1000);
+        });
+
+        // Enhanced modal functionality
+        const closeUpload = document.getElementById("closeUpload");
+        const closeSub = document.getElementById("closeSubscription");
+
+        function closeModal(modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        closeUpload.addEventListener("click", () => {
+            closeModal(document.getElementById("logUploadModal"));
+        });
+
+        closeSub.addEventListener("click", () => {
+            closeModal(document.getElementById("subscriptionModal"));
+        });
+
+        // Enhanced subscription functionality
+        document.getElementById("upgradeBtn").addEventListener("click", () => {
+            showNotification('Redirecting to payment gateway...', 'info');
+            setTimeout(() => {
+                alert("🚀 Redirecting to secure payment portal...\n\nUpgrade to Pro for advanced features!");
+                closeModal(document.getElementById("subscriptionModal"));
+            }, 1500);
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!profileMenu.contains(event.target)) {
+                profileDropdown.style.display = 'none';
+                profileDropdown.classList.remove('show');
+            }
+        });
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    closeModal(modal);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

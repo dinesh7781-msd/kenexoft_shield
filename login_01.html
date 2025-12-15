@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Registration Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <link rel="stylesheet" href="dashboard.html">
+    <style>
+        /* Scroll to top button */
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 100;
+            background: linear-gradient(90deg, #e1a6ea 0%, #e1a6ea 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 16px rgba(59,130,246,0.18);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        #scrollTopBtn:hover {
+            background: linear-gradient(90deg, #e1a6ea 0%, #e1a6ea 100%);
+            transform: scale(1.1);
+        }
+        /* Input valid/invalid feedback */
+        .input-field:invalid:not(:focus):not(:placeholder-shown) {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .input-field:valid:not(:focus):not(:placeholder-shown) {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+        /* Button active effect */
+        .gradient-btn:active {
+            filter: brightness(0.95);
+            transform: scale(0.98);
+        }
+        body.gradient-bg {
+            min-height: 100vh;
+            --x: 50;
+            --y: 50;
+            background: linear-gradient(calc(120deg + (var(--x) - 50) * 0.4deg), #e1a6ea 0%, #1e40af 50%, #38bdf8 100%);
+            background-size: 200% 200%;
+            animation: gradientMove 10s ease-in-out infinite alternate;
+            position: relative;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        /* Floating shapes */
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.25;
+            filter: blur(2px);
+            animation: floatShape 16s linear infinite;
+            will-change: transform;
+            pointer-events: none;
+        }
+        .floating-shape.shape1 {
+            width: 180px; height: 180px;
+            top: calc(5% + (var(--y, 50) - 50) * 0.3px);
+            left: calc(8% + (var(--x, 50) - 50) * 0.3px);
+            background: radial-gradient(circle, #2563eb 60%, #1e40af 100%);
+            animation-delay: 0s;
+        }
+        .floating-shape.shape2 {
+            width: 120px; height: 120px;
+            bottom: calc(10% - (var(--y, 50) - 50) * 0.2px);
+            right: calc(12% - (var(--x, 50) - 50) * 0.2px);
+            background: radial-gradient(circle, #38bdf8 60%, #2563eb 100%);
+            animation-delay: 4s;
+        }
+        .floating-shape.shape3 {
+            width: 90px; height: 90px;
+            top: calc(60% + (var(--y, 50) - 50) * 0.2px);
+            left: calc(70% + (var(--x, 50) - 50) * 0.2px);
+            background: radial-gradient(circle, #1e40af 60%, #38bdf8 100%);
+            animation-delay: 8s;
+        }
+        .floating-shape.shape4 {
+            width: 60px; height: 60px;
+            bottom: calc(20% - (var(--y, 50) - 50) * 0.1px);
+            left: calc(20% + (var(--x, 50) - 50) * 0.1px);
+            background: radial-gradient(circle, #2563eb 60%, #38bdf8 100%);
+            animation-delay: 12s;
+        }
+        @keyframes floatShape {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        .form-container {
+            box-shadow: 0 16px 40px -8px rgba(30,58,138,0.18), 0 4px 24px -4px rgba(59,130,246,0.10);
+            border-radius: 1.5rem;
+            background: rgba(225,166,234,0.28);
+            position: relative;
+            z-index: 1;
+            transition: box-shadow 0.3s, transform 0.3s;
+            overflow-y: auto;
+            border: 1.5px solid #e1a6ea;
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+        }
+        .form-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1.5rem;
+            z-index: 0;
+            background: linear-gradient(120deg, rgba(225,166,234,0.18) 0%, rgba(56,189,248,0.10) 100%);
+            pointer-events: none;
+        }
+        .form-container > * {
+            position: relative;
+            z-index: 1;
+        }
+        .form-container:hover {
+            box-shadow: 0 24px 60px -12px rgba(30,58,138,0.22), 0 8px 32px -8px rgba(59,130,246,0.14);
+            transform: scale(1.02);
+            background: rgba(255,255,255,0.28);
+        }
+        .input-field {
+            transition: box-shadow 0.2s, border-color 0.2s, background 0.3s;
+        }
+        .input-field:focus {
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.25), 0 2px 8px rgba(59,130,246,0.10);
+            border-color: #2563eb;
+            background: linear-gradient(90deg, #e0e7ff 0%, #f0f9ff 100%);
+        }
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #2563eb;
+            pointer-events: none;
+        }
+        .toggle-form {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .toggle-form:hover {
+            text-decoration: underline;
+            color: #f2a2ee;
+        }
+        .toggle-form::after {
+            content: '';
+            display: block;
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toggle-form:hover::after {
+            opacity: 1;
+        }
+        .gradient-btn {
+            background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
+            box-shadow: 0 2px 8px rgba(59,130,246,0.12);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        .gradient-btn:hover {
+            background: linear-gradient(90deg, #1e40af 0%, #2563eb 100%);
+            box-shadow: 0 4px 16px rgba(59,130,246,0.18);
+            transform: scale(1.05);
+        }
+        .header-gradient {
+            background: linear-gradient(90deg, #e1a6ea 0%, #1e40af 100%);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(30,58,138,0.10);
+            animation: headerGradient 6s linear infinite alternate;
+        }
+        @keyframes headerGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .form-container {
+                border-radius: 1rem;
+                box-shadow: 0 8px 24px -4px rgba(30,58,138,0.14);
+            }
+            .p-8 {
+                padding: 1.5rem !important;
+            }
+            .p-6 {
+                padding: 1rem !important;
+            }
+            .max-w-5xl {
+                max-width: 100% !important;
+            }
+            .grid-cols-2, .md\:grid-cols-2 {
+                grid-template-columns: 1fr !important;
+            }
+            .grid-cols-3, .md\:grid-cols-3 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        @media (max-width: 480px) {
+            .form-container {
+                border-radius: 0.5rem;
+                box-shadow: 0 2px 6px -1px rgba(30,58,138,0.10);
+            }
+            .p-8, .p-6 {
+                padding: 0.75rem !important;
+            }
+            h1, h2, h3 {
+                font-size: 1.1rem !important;
+            }
+            .input-field {
+                font-size: 0.95rem !important;
+                padding: 0.5rem 0.75rem !important;
+            }
+            .space-x-4 > * {
+                margin-right: 0.5rem !important;
+            }
+        }
+        /* Modal fade-in/out effect */
+        #forgotPasswordModal {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        #forgotPasswordModal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+<body class="min-h-screen gradient-bg flex p-4">
+    <!-- Dynamic floating shapes background -->
+    <div class="floating-shape shape1"></div>
+    <div class="floating-shape shape2"></div>
+    <div class="floating-shape shape3"></div>
+    <div class="floating-shape shape4"></div>
+    <!-- Scroll to top button -->
+    <button id="scrollTopBtn" title="Scroll to top">&#8679;</button>
+    <div class="max-w-5xl w-full mx-auto" style="position:relative; z-index:2;">
+        <div class="bg-white rounded-2xl form-container">
+            <!-- Header with logo and navigation -->
+            <div class="header-gradient p-8 border-b border-blue-900 flex justify-between items-center shadow-lg">
+                <div class="flex items-center">
+                    <img src="https://placehold.co/48x48" alt="Company logo - Abstract blue and white design with a building silhouette" class="h-12 w-12 mr-4 rounded-full shadow-md">
+                    <h1 class="text-2xl font-extrabold tracking-wide">
+                        <span id="typed-header"></span>
+                        <span class="blinking-cursor">|</span>
+                    </h1>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" id="showLogin" class="toggle-form font-semibold text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition">Login</a>
+                    <a href="#" id="showRegister" class="toggle-form font-semibold text-blue-200 px-4 py-2 rounded-lg hover:bg-blue-900 transition">Register</a>
+                </div>
+            </div>
+
+            <!-- Form content area -->
+            <div class="p-8">
+                <!-- Login Form (initially visible) -->
+                <div id="loginForm">
+                    <!-- Forgot Password Modal -->
+                    <div id="forgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+                            <button id="closeForgotModal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+                            <h3 class="text-xl font-bold mb-4 text-blue-700">Forgot Password</h3>
+                            <form id="forgotPasswordForm" class="space-y-4" method="POST" action="forgot_password.php">
+                                <div>
+                                    <label for="forgotEmail" class="block text-sm font-medium text-gray-700 mb-1">Enter your registered email</label>
+                                    <input type="email" id="forgotEmail" name="forgotEmail" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="your@email.com">
+                                </div>
+                                <button type="submit" class="w-full py-2 px-4 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Send Reset Link</button>
+                            </form>
+                            <div id="forgotSuccess" class="mt-4 text-green-600 text-sm hidden">If this email is registered, a reset link will be sent.</div>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Login to Your Account</h2>
+                    <form id="loginFormTag" class="space-y-6" method="POST" action="login.php">
+                        <div class="relative">
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username or Email</label>
+                            <span class="input-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12A4 4 0 1 1 8 12a4 4 0 0 1 8 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7m0 0H9m3 0h3" /></svg></span>
+                            <input type="text" id="username" name="username" class="w-full pl-10 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Enter your username or email">
+                        </div>
+                        <div class="relative">
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <span class="input-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.104 0 2-.896 2-2s-.896-2-2-2-2 .896-2 2 .896 2 2 2zm0 0v2m0 4h.01" /></svg></span>
+                            <input type="password" id="password" name="password" class="w-full pl-10 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Enter your password">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                            </div>
+                            <div class="text-sm">
+                                <a href="#" id="forgotPasswordLink" class="font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                Sign in
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            Don't have an account? 
+                            <a href="#" id="switchToRegister" class="toggle-form font-medium text-blue-600 hover:text-blue-500">Sign up</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Registration Form (initially hidden) -->
+                <div id="registerForm" class="hidden">
+    <!-- Confetti canvas for registration success -->
+    <canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:999;display:none;"></canvas>
+    <!-- Motivational Quotes Carousel -->
+    <div class="mt-10 flex flex-col items-center">
+        <div id="quoteCarousel" class="bg-blue-50 rounded-xl shadow p-4 max-w-xl text-center text-blue-900 text-lg font-semibold min-h-[60px] transition-all duration-500"></div>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Company Registration</h2>
+    <form class="space-y-6" method="POST" action="register_0.php" autocomplete="off">
+                        <!-- Company Information Section -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Company Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">Company Name*</label>
+                                    <input type="text" id="companyName" name="companyName" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Enter company name">
+                                </div>
+                                <div>
+                                    <label for="website" class="block text-sm font-medium text-gray-700 mb-1">Company Website</label>
+                                    <input type="url" id="website" name="website" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="https://example.com">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Company Phone Number*</label>
+                                    <input type="tel" id="phone" name="phone" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="+1 (555) 123-4567">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Company Email ID*</label>
+                                    <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="contact@company.com">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label for="branches" class="block text-sm font-medium text-gray-700 mb-1">Number of Branches*</label>
+                                <select id="branches" name="branches" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field">
+                                    <option value="">Select number of branches</option>
+                                    <option value="1">1</option>
+                                    <option value="2-5">2-5</option>
+                                    <option value="6-10">6-10</option>
+                                    <option value="11-25">11-25</option>
+                                    <option value="25+">25+</option>
+                                </select>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Registered Office Address*</label>
+                                <div class="space-y-4">
+                                    <input type="text" name="address1" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Address Line 1">
+                                    <input type="text" name="address2" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Address Line 2">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <input type="text" name="street" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Street">
+                                        </div>
+                                        <div>
+                                            <input type="text" name="city" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="City">
+                                        </div>
+                                        <div>
+                                            <input type="text" name="state" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="State/Province">
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <select name="country" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field">
+                                                <option value="">Select Country</option>
+                                                <option value="US">United States</option>
+                                                <option value="CA">Canada</option>
+                                                <option value="UK">United Kingdom</option>
+                                                <option value="AU">Australia</option>
+                                                <option value="IN">India</option>
+                                                <option value="DE">Germany</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Company Representative Section -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Company Representative Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name*</label>
+                                    <input type="text" id="firstName" name="firstName" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="First name">
+                                </div>
+                                <div>
+                                    <label for="middleName" class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+                                    <input type="text" id="middleName" name="middleName" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Middle name">
+                                </div>
+                                <div>
+                                    <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name*</label>
+                                    <input type="text" id="lastName" name="lastName" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Last name">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div>
+                                    <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role in Company*</label>
+                                    <input type="text" id="role" name="role" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="e.g., CEO, Director, HR Manager">
+                                </div>
+                                <div>
+                                    <label for="repEmail" class="block text-sm font-medium text-gray-700 mb-1">Office Email ID*</label>
+                                    <input type="email" id="repEmail" name="repEmail" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="your.name@company.com">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div>
+                                    <label for="personalEmail" class="block text-sm font-medium text-gray-700 mb-1">Personal Email ID</label>
+                                    <input type="email" id="personalEmail" name="personalEmail" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="personal@email.com">
+                                </div>
+                                <div>
+                                    <label for="mobile" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number*</label>
+                                    <input type="tel" id="mobile" name="mobile" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="+1 (555) 987-6543">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label for="repAddress" class="block text-sm font-medium text-gray-700 mb-1">Representative Address</label>
+                                <textarea id="repAddress" name="repAddress" rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 input-field" placeholder="Representative's address (if different from company)"></textarea>
+                            </div>
+                        </div>
+                        <!-- Terms and Conditions -->
+                        <div class="mt-6">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="terms" name="terms" type="checkbox" required class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="terms" class="font-medium text-gray-700">I agree to the</label>
+                                    <a href="#" class="text-blue-600 hover:text-blue-500">Terms and Conditions</a> and 
+                                    <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- CAPTCHA -->
+                        <div class="mt-6">
+                            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="mt-8">
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                Register Your Company
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            Already have an account? 
+                            <a href="#" id="switchToLogin" class="toggle-form font-medium text-blue-600 hover:text-blue-500">Sign in</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    // All interactive logic and addictive UI features
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Addictive UI Features ---
+        // 1. Animated typing effect in header
+        const headerTexts = [
+            "Welcome to Company Registration Portal",
+            "Empowering Your Business Journey",
+            "Secure. Fast. Professional.",
+            "Join Hundreds of Happy Companies!"
+        ];
+        let headerIndex = 0, charIndex = 0, typing = true;
+        const typedHeader = document.getElementById('typed-header');
+        const cursor = document.querySelector('.blinking-cursor');
+        function typeHeader() {
+            if (typing) {
+                if (charIndex < headerTexts[headerIndex].length) {
+                    typedHeader.textContent += headerTexts[headerIndex][charIndex++];
+                    setTimeout(typeHeader, 60);
+                } else {
+                    typing = false;
+                    setTimeout(typeHeader, 1200);
+                }
+            } else {
+                if (charIndex > 0) {
+                    typedHeader.textContent = headerTexts[headerIndex].substring(0, --charIndex);
+                    setTimeout(typeHeader, 30);
+                } else {
+                    typing = true;
+                    headerIndex = (headerIndex + 1) % headerTexts.length;
+                    setTimeout(typeHeader, 400);
+                }
+            }
+        }
+        typeHeader();
+        setInterval(() => { cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0'; }, 500);
+
+        // 2. Parallax effect for floating shapes
+        document.body.addEventListener('mousemove', function(e) {
+            document.querySelectorAll('.floating-shape').forEach(function(shape, i) {
+                const moveX = (e.clientX / window.innerWidth - 0.5) * (30 + i * 10);
+                const moveY = (e.clientY / window.innerHeight - 0.5) * (30 + i * 10);
+                shape.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            });
+        });
+
+        // 3. Motivational Quotes Carousel
+        const quotes = [
+            "Success is not the key to happiness. Happiness is the key to success.",
+            "Great things never come from comfort zones.",
+            "Dream big. Work hard. Stay focused.",
+            "Your business is our priority.",
+            "Innovation distinguishes between a leader and a follower."
+        ];
+        let quoteIdx = 0;
+        const quoteCarousel = document.getElementById('quoteCarousel');
+        function showQuote() {
+            quoteCarousel.style.opacity = 0;
+            setTimeout(() => {
+                quoteCarousel.textContent = quotes[quoteIdx];
+                quoteCarousel.style.opacity = 1;
+                quoteIdx = (quoteIdx + 1) % quotes.length;
+            }, 400);
+        }
+        showQuote();
+        setInterval(showQuote, 4000);
+
+        // 4. Button ripple effect
+        document.querySelectorAll('button, .gradient-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const circle = document.createElement('span');
+                circle.className = 'ripple';
+                circle.style.left = `${e.offsetX}px`;
+                circle.style.top = `${e.offsetY}px`;
+                this.appendChild(circle);
+                setTimeout(() => circle.remove(), 600);
+            });
+        });
+
+        // 5. Input shake on error
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                let invalid = false;
+                this.querySelectorAll('.input-field[required]').forEach(input => {
+                    if (!input.checkValidity()) {
+                        invalid = true;
+                        input.classList.add('shake');
+                        setTimeout(() => input.classList.remove('shake'), 400);
+                    }
+                });
+                if (invalid) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // 6. Confetti burst on registration submit
+        const regForm = document.querySelector('#registerForm form');
+        if (regForm) {
+            regForm.addEventListener('submit', function(e) {
+                if (this.checkValidity()) {
+                    setTimeout(() => {
+                        confettiBurst();
+                    }, 200);
+                }
+            });
+        }
+        function confettiBurst() {
+            const canvas = document.getElementById('confettiCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            const confetti = [];
+            for (let i = 0; i < 120; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * -canvas.height,
+                    r: Math.random() * 8 + 4,
+                    d: Math.random() * 80 + 40,
+                    color: `hsl(${Math.random()*360},90%,60%)`,
+                    tilt: Math.random() * 10 - 5
+                });
+            }
+            let angle = 0;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                angle += 0.01;
+                for (let i = 0; i < confetti.length; i++) {
+                    let c = confetti[i];
+                    ctx.beginPath();
+                    ctx.ellipse(c.x, c.y, c.r, c.r/2, c.tilt, 0, 2 * Math.PI);
+                    ctx.fillStyle = c.color;
+                    ctx.fill();
+                    c.y += Math.cos(angle + i) + 2 + c.d / 60;
+                    c.x += Math.sin(angle) * 2;
+                    c.tilt += Math.sin(angle) * 0.2;
+                    if (c.y > canvas.height) {
+                        c.x = Math.random() * canvas.width;
+                        c.y = Math.random() * -20;
+                    }
+                }
+                if (canvas.style.display === 'block') {
+                    requestAnimationFrame(draw);
+                }
+            }
+            draw();
+            setTimeout(() => { canvas.style.display = 'none'; }, 1800);
+        }
+
+        // --- Core UI Logic (toggling, modal, focus/blur, scroll-to-top, etc.) ---
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const showLogin = document.getElementById('showLogin');
+        const showRegister = document.getElementById('showRegister');
+        const switchToLogin = document.getElementById('switchToLogin');
+        const switchToRegister = document.getElementById('switchToRegister');
+        // Forgot Password Modal Elements
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const closeForgotModal = document.getElementById('closeForgotModal');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const forgotSuccess = document.getElementById('forgotSuccess');
+        // Scroll to top button
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+
+        // Cursor-reactive background
+        document.body.addEventListener('mousemove', function(e) {
+            const x = Math.round((e.clientX / window.innerWidth) * 100);
+            const y = Math.round((e.clientY / window.innerHeight) * 100);
+            document.body.style.setProperty('--x', x);
+            document.body.style.setProperty('--y', y);
+        });
+
+        // Scroll to top button logic
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 200) {
+                scrollTopBtn.style.display = 'block';
+            } else {
+                scrollTopBtn.style.display = 'none';
+            }
+        });
+        scrollTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Helper to show/hide forms and reset opacity, with scroll animation
+        function showLoginForm() {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            loginForm.style.opacity = 1;
+            registerForm.style.opacity = 1;
+            showLogin.classList.remove('text-gray-600', 'bg-gray-100');
+            showLogin.classList.add('text-blue-600', 'bg-blue-50');
+            showRegister.classList.remove('text-blue-600', 'bg-blue-50');
+            showRegister.classList.add('text-gray-600');
+            setTimeout(() => {
+                loginForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+        function showRegisterForm() {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            loginForm.style.opacity = 1;
+            registerForm.style.opacity = 1;
+            showRegister.classList.remove('text-gray-600');
+            showRegister.classList.add('text-blue-600', 'bg-blue-50');
+            showLogin.classList.remove('text-blue-600', 'bg-blue-50');
+            showLogin.classList.add('text-gray-600');
+            setTimeout(() => {
+                registerForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+        // Modal logic
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            forgotPasswordModal.classList.add('show');
+            forgotPasswordModal.classList.remove('hidden');
+        });
+        closeForgotModal.addEventListener('click', function() {
+            forgotPasswordModal.classList.remove('show');
+            setTimeout(() => {
+                forgotPasswordModal.classList.add('hidden');
+                forgotSuccess.classList.add('hidden');
+                forgotPasswordForm.reset();
+            }, 300);
+        });
+        forgotPasswordForm.addEventListener('submit', function(e) {
+            // Allow form to submit to server for processing
+            console.log('Forgot password form submitted to server');
+            // Don't prevent default - let it submit to forgot_password.php
+        });
+        // Switch links inside forms
+        showLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLoginForm();
+        });
+        showRegister.addEventListener('click', function(e) {
+            e.preventDefault();
+            showRegisterForm();
+        });
+        switchToLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLoginForm();
+        });
+        switchToRegister.addEventListener('click', function(e) {
+            e.preventDefault();
+            showRegisterForm();
+        });
+
+        // Real-time input focus/blur and validation feedback
+        document.querySelectorAll('.input-field').forEach(function(input) {
+            input.addEventListener('focus', function() {
+                this.classList.add('ring', 'ring-blue-300', 'bg-blue-50');
+            });
+            input.addEventListener('blur', function() {
+                this.classList.remove('ring', 'ring-blue-300', 'bg-blue-50');
+            });
+        });
+    });
+    // ...inside document.addEventListener('DOMContentLoaded', function() { ... });
+
+const loginFormTag = document.getElementById('loginFormTag');
+if (loginFormTag) {
+    loginFormTag.addEventListener('submit', function(e) {
+        // Allow normal form submission to server
+        console.log('Login form submitted to server');
+        // Form will submit normally to login.php
+    });
+}
+    </script>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <!-- Messages will be inserted here by JavaScript -->
+    </div>
+
+    <script>
+    // Handle URL parameters for displaying messages
+    function showMessage(type, message) {
+        const container = document.getElementById('messageContainer');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert alert-${type} p-4 mb-4 rounded-lg shadow-lg max-w-sm`;
+        messageDiv.style.cssText = `
+            background: ${type === 'success' ? '#d1fae5' : '#fee2e2'};
+            color: ${type === 'success' ? '#065f46' : '#991b1b'};
+            border: 1px solid ${type === 'success' ? '#a7f3d0' : '#fca5a5'};
+            margin-bottom: 10px;
+        `;
+        messageDiv.innerHTML = `
+            <div style="display: flex; justify-content: between; align-items: center;">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" style="margin-left: 10px; background: none; border: none; font-size: 18px; cursor: pointer;">&times;</button>
+            </div>
+        `;
+        container.appendChild(messageDiv);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Check URL parameters on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success')) {
+            showMessage('success', 'Operation completed successfully!');
+        }
+        if (urlParams.get('error')) {
+            showMessage('error', urlParams.get('error'));
+        }
+        if (urlParams.get('message')) {
+            showMessage('info', urlParams.get('message'));
+        }
+    });
+    </script>
+</body>
+</html>
